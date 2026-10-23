@@ -1,0 +1,91 @@
+name: Track PyPI Download Metrics
+
+on:
+  schedule:
+    - cron: '30 8 * * *'  # Run every day at 8:30am UTC, after the other metrics bots
+  workflow_dispatch:
+    inputs:
+      start:
+        description: 'Backfill from this date (YYYY-MM-DD). Leave empty for the last 7 days.'
+        required: false
+        default: ''
+  push:
+    paths:
+      - .github/scripts/pypi_download_metrics.py
+      - .github/workflows/pypi-download-metrics.yml
+
+# All metrics bots push to the metrics branch; never run two of these at once.
+concurrency:
+  group: pypi-download-metrics
+  cancel-in-progress: false
+
+jobs:
+  pypi-stats:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout script
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history so the metrics branch can rebase
+
+      - name: Checkout metrics branch
+        run: |
+          # Check out the metrics branch in its own folder, or start it if missing
+          if git ls-remote --exit-code --heads origin metrics > /dev/null; then
+            git fetch origin metrics
+            git worktree add -B metrics metrics-data origin/metrics
+          else
+            echo "🆕 Creating new metrics branch..."
+            git worktree add --orphan -b metrics metrics-data
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Fetch PyPI download data
+        env:
+          START: ${{ github.event.inputs.start }}
+        run: |
+          ARGS="--out metrics-data/.metrics"
+          if [ -n "$START" ]; then
+            ARGS="$ARGS --start $START"
+          elif [ ! -f metrics-data/.metrics/daily_pypi_downloads.csv ]; then
+            echo "🆕 No PyPI CSV yet; backfilling from the first release"
+            ARGS="$ARGS --start 2025-09-01"
+          fi
+          python .github/scripts/pypi_download_metrics.py $ARGS
+          echo "PyPI download summary (last 5 days):"
+          tail -n 5 metrics-data/.metrics/daily_pypi_downloads_summary.csv
+
+      - name: Commit and push results
+        working-directory: metrics-data
+        run: |
+          git config user.name "PyPIMetricsBot[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add .metrics/daily_pypi_downloads.csv .metrics/daily_pypi_downloads_summary.csv
+
+          if git diff --staged --quiet; then
+            echo "ℹ️  No changes to commit - CSV data is up to date"
+            exit 0
+          fi
+
+          echo "📝 Committing changes..."
+          git commit -m "Automated update: PyPI download metrics $(date -u)"
+
+          # Other bots push to this branch too: rebase on their commits instead of overwriting
+          for attempt in 1 2 3; do
+            if git push origin metrics; then
+              echo "🚀 Pushed to metrics branch"
+              exit 0
+            fi
+            echo "Push rejected (attempt $attempt); rebasing on the latest metrics branch..."
+            git pull --rebase origin metrics
+          done
+          echo "❌ Could not push after 3 attempts"
+          exit 1
