@@ -29,5 +29,7 @@ Suggested merge order (three PRs change `WebSocketManager.receive()`): **#399 â†
 | [amankh#1](https://github.com/amankh/ros-mcp-server/pull/1) | ROS 2 Lyrical in the integration test matrix |
 | [amankh#2](https://github.com/amankh/ros-mcp-server/pull/2) | PyPI download metrics (version, OS, installer, CI flag), replacing the empty release-download metric |
 | [amankh#3](https://github.com/amankh/ros-mcp-server/pull/3) | Allow fastmcp 3.x (`<4`); tests use FastMCP's public API |
+| [amankh#4](https://github.com/amankh/ros-mcp-server/pull/4) | `publish_once` 2.0 s â†’ 0.2 s per call (measured settle window; 20/20 delivered on Jazzy and Humble) |
+| [amankh#5](https://github.com/amankh/ros-mcp-server/pull/5) | OpenTelemetry: optional tool arguments/results on spans, tool errors marked (stacked on #3) |
 
 Last updated 2026-10-23.
