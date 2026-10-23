@@ -27,6 +27,8 @@ from ros_mcp.resources import register_all_resources
 from ros_mcp.utils.rosapi_types import RosVersion, get_ros_version
 from ros_mcp.utils.websocket import WebSocketManager
 
+from ._mcp_registry import registered_resources
+
 pytestmark = [pytest.mark.integration]
 
 ALL = "ros-mcp://ros-metadata/all"
@@ -222,7 +224,7 @@ def offline_resources():
     ws = WebSocketManager("127.0.0.1", 1, default_timeout=1.0)
     mcp = FastMCP("offline-ros-mcp")
     register_all_resources(mcp, ws)
-    return {uri: res.fn for uri, res in mcp._resource_manager._resources.items()}
+    return registered_resources(mcp)
 
 
 class TestOfflineDegradation:
