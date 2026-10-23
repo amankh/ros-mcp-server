@@ -24,6 +24,7 @@ declare -A DOCKERFILES=(
     [noetic]="Dockerfile.ros1-noetic"
     [humble]="Dockerfile.ros2-humble"
     [jazzy]="Dockerfile.ros2-jazzy"
+    [lyrical]="Dockerfile.ros2-lyrical"
 )
 
 declare -A CONTAINERS=(
@@ -31,13 +32,14 @@ declare -A CONTAINERS=(
     [noetic]="integration-ros-noetic"
     [humble]="integration-ros2-humble"
     [jazzy]="integration-ros2-jazzy"
+    [lyrical]="integration-ros2-lyrical"
 )
 
 DOCKERFILE="${DOCKERFILES[$REAL_DISTRO]}"
 CONTAINER="${CONTAINERS[$REAL_DISTRO]}"
 
 if [ -z "$DOCKERFILE" ]; then
-    echo "Unknown distro: $REAL_DISTRO (valid: melodic, noetic, humble, jazzy)"
+    echo "Unknown distro: $REAL_DISTRO (valid: melodic, noetic, humble, jazzy, lyrical)"
     exit 1
 fi
 

@@ -6,7 +6,7 @@ rosbridge container.
 
 Action servers per distro:
 - ROS 1 (melodic/noetic): /shape_server (from turtle_actionlib)
-- ROS 2 (humble/jazzy): /turtle1/rotate_absolute (from turtlesim)
+- ROS 2: /turtle1/rotate_absolute (from turtlesim; type in turtlesim_msgs since Kilted)
 
 get_action_details and get_action_status use ROS 2-only rosbridge features
 (/rosapi/interfaces, send_action_goal op). See issue #320 for ROS 1 support
@@ -17,7 +17,7 @@ import asyncio
 
 import pytest
 
-from ros_mcp.utils.rosapi_types import RosVersion, get_ros_version
+from ros_mcp.utils.rosapi_types import RosVersion, get_distro, get_ros_version
 
 pytestmark = [pytest.mark.integration]
 
@@ -34,9 +34,16 @@ _ACTIONS = {
 }
 
 
+# Since Kilted, turtlesim's interfaces live in the separate turtlesim_msgs package.
+_LEGACY_TURTLESIM_DISTROS = {"humble", "iron", "jazzy"}
+
+
 def _action():
     """Return the action dict (name, type) for the current distro."""
-    return _ACTIONS[get_ros_version()]
+    action = dict(_ACTIONS[get_ros_version()])
+    if get_ros_version() == RosVersion.ROS2 and get_distro() not in _LEGACY_TURTLESIM_DISTROS:
+        action["type"] = "turtlesim_msgs/action/RotateAbsolute"
+    return action
 
 
 class TestGetActions:

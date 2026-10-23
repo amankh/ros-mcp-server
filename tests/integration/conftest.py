@@ -23,6 +23,7 @@ _DOCKERFILE_MAP = {
     "noetic": "Dockerfile.ros1-noetic",
     "humble": "Dockerfile.ros2-humble",
     "jazzy": "Dockerfile.ros2-jazzy",
+    "lyrical": "Dockerfile.ros2-lyrical",
 }
 
 _CONTAINER_NAME_MAP = {
@@ -30,6 +31,7 @@ _CONTAINER_NAME_MAP = {
     "noetic": "integration-ros-noetic",
     "humble": "integration-ros2-humble",
     "jazzy": "integration-ros2-jazzy",
+    "lyrical": "integration-ros2-lyrical",
 }
 
 
