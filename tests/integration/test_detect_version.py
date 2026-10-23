@@ -21,6 +21,7 @@ _DISTRO_TO_VERSION = {
     "noetic": RosVersion.ROS1,
     "humble": RosVersion.ROS2,
     "jazzy": RosVersion.ROS2,
+    "lyrical": RosVersion.ROS2,
 }
 
 _DISTRO_TO_PREFIX = {
@@ -28,6 +29,7 @@ _DISTRO_TO_PREFIX = {
     "noetic": "/rosapi",
     "humble": "/rosapi",
     "jazzy": "/rosapi",
+    "lyrical": "/rosapi",
 }
 
 

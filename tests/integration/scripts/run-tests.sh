@@ -13,7 +13,7 @@ if [ -z "${1:-}" ]; then
         | grep -v quick_detect \
         | tr '\n' ', ' | sed 's/,$//')
     echo "Usage: $0 <distro> [module]"
-    echo "Distros: melodic, noetic, humble, jazzy"
+    echo "Distros: melodic, noetic, humble, jazzy, lyrical"
     echo "Modules: $MODULES"
     exit 1
 fi
@@ -27,6 +27,7 @@ declare -A DOCKERFILES=(
     [noetic]="Dockerfile.ros1-noetic"
     [humble]="Dockerfile.ros2-humble"
     [jazzy]="Dockerfile.ros2-jazzy"
+    [lyrical]="Dockerfile.ros2-lyrical"
 )
 
 declare -A CONTAINERS=(
@@ -34,6 +35,7 @@ declare -A CONTAINERS=(
     [noetic]="integration-ros-noetic"
     [humble]="integration-ros2-humble"
     [jazzy]="integration-ros2-jazzy"
+    [lyrical]="integration-ros2-lyrical"
 )
 
 DOCKERFILE="${DOCKERFILES[$DISTRO]}"
@@ -41,7 +43,7 @@ CONTAINER="${CONTAINERS[$DISTRO]}"
 
 if [ -z "$DOCKERFILE" ]; then
     echo "Unknown distro: $DISTRO"
-    echo "Valid options: melodic, noetic, humble, jazzy"
+    echo "Valid options: melodic, noetic, humble, jazzy, lyrical"
     exit 1
 fi
 

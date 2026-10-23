@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ros-distro: [melodic, noetic, humble, jazzy]
+        ros-distro: [melodic, noetic, humble, jazzy, lyrical]
         include:
           - ros-distro: melodic
             dockerfile: Dockerfile.ros1-melodic
@@ -28,6 +28,9 @@ jobs:
           - ros-distro: jazzy
             dockerfile: Dockerfile.ros2-jazzy
             container-name: integration-ros2-jazzy
+          - ros-distro: lyrical
+            dockerfile: Dockerfile.ros2-lyrical
+            container-name: integration-ros2-lyrical
 
     name: ${{ matrix.ros-distro }}
     steps:

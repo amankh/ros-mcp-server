@@ -27,6 +27,7 @@ run_check melodic ROS1
 run_check noetic  ROS1
 run_check humble  ROS2
 run_check jazzy   ROS2
+run_check lyrical ROS2
 
 echo ""
 echo "========================================"
