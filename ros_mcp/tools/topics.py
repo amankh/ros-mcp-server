@@ -15,6 +15,10 @@ from ros_mcp.utils.response import _check_response, _safe_get_values
 from ros_mcp.utils.rosapi_types import rosapi_service, rosapi_type
 from ros_mcp.utils.websocket import WebSocketManager, parse_input
 
+# Seconds publish_once waits after publishing before it unadvertises. Measured on the
+# Humble and Jazzy turtlesim images: 0 s drops about half the messages, 0.1 s delivers all.
+PUBLISH_SETTLE_SECONDS = 0.2
+
 
 def register_topic_tools(
     mcp: FastMCP,
@@ -777,18 +781,6 @@ def register_topic_tools(
             if send_error:
                 return {"error": f"Failed to advertise topic: {send_error}"}
 
-            # Check for advertise response/errors
-            response = ws_manager.receive(timeout=1.0)
-            if response:
-                try:
-                    msg_data = json.loads(response)
-                    if msg_data.get("op") == "status" and msg_data.get("level") == "error":
-                        return {
-                            "error": f"Advertise failed: {msg_data.get('msg', 'Unknown error')}"
-                        }
-                except json.JSONDecodeError:
-                    pass  # Non-JSON response is usually fine for advertise
-
             # 2. Publish the message
             publish_msg = {"op": "publish", "topic": topic, "msg": msg}
             send_error = ws_manager.send(publish_msg)
@@ -797,17 +789,24 @@ def register_topic_tools(
                 ws_manager.send({"op": "unadvertise", "topic": topic})
                 return {"error": f"Failed to publish message: {send_error}"}
 
-            # Check for publish response/errors
-            response = ws_manager.receive(timeout=1.0)
-            if response:
+            # rosbridge sends no reply when advertise and publish succeed, only a
+            # status message on error. Wait a short settle window before
+            # unadvertising: it lets ROS deliver the message (unadvertising at once
+            # drops about half of them) and catches errors, without closing the
+            # connection on the expected timeout.
+            deadline = time.monotonic() + PUBLISH_SETTLE_SECONDS
+            while (remaining := deadline - time.monotonic()) > 0:
+                response = ws_manager.poll(timeout=remaining)
+                if response is None:
+                    break
                 try:
                     msg_data = json.loads(response)
-                    if msg_data.get("op") == "status" and msg_data.get("level") == "error":
-                        # Unadvertise before returning error
-                        ws_manager.send({"op": "unadvertise", "topic": topic})
-                        return {"error": f"Publish failed: {msg_data.get('msg', 'Unknown error')}"}
                 except json.JSONDecodeError:
-                    pass  # Non-JSON response is usually fine for publish
+                    continue  # Non-JSON response is usually fine for publish
+                if msg_data.get("op") == "status" and msg_data.get("level") == "error":
+                    # Unadvertise before returning error
+                    ws_manager.send({"op": "unadvertise", "topic": topic})
+                    return {"error": f"Publish failed: {msg_data.get('msg', 'Unknown error')}"}
 
             # 3. Unadvertise the topic
             unadvertise_msg = {"op": "unadvertise", "topic": topic}
