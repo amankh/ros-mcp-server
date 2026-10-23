@@ -382,6 +382,33 @@ class WebSocketManager:
                     return None
             return None
 
+    def poll(self, timeout: float) -> Union[str, bytes] | None:
+        """
+        Receive a single message if one arrives within the timeout.
+
+        Unlike receive(), a timeout here is not an error: it returns None and
+        keeps the connection open. Use it to check for rosbridge errors after
+        an operation that sends no reply on success (advertise, publish).
+
+        Args:
+            timeout (float): Seconds to wait.
+
+        Returns:
+            str | None: JSON string received from rosbridge, or None on timeout/error.
+        """
+        with self.lock:
+            if not (self.ws and self.ws.connected):
+                return None
+            try:
+                self.ws.settimeout(timeout)
+                return self.ws.recv()
+            except (websocket.WebSocketTimeoutException, TimeoutError):
+                return None
+            except Exception as e:
+                print(f"[WebSocket] Poll error: {e}", file=sys.stderr)
+                self.close()
+                return None
+
     def request(self, message: dict, timeout: float | None = None) -> dict:
         """
         Send a request to Rosbridge and return the response.
