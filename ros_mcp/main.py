@@ -11,6 +11,7 @@ from fastmcp import FastMCP
 from ros_mcp.prompts import register_all_prompts
 from ros_mcp.resources import register_all_resources
 from ros_mcp.tools import register_all_tools
+from ros_mcp.utils.otel import instrument_tools
 from ros_mcp.utils.websocket import WebSocketManager
 
 # ROS bridge connection settings
@@ -81,6 +82,9 @@ def main():
     mcp_transport = args.transport.lower()
     mcp_host = args.host
     mcp_port = args.port
+
+    # Optional OpenTelemetry attributes on tool-call spans (see ros_mcp/utils/otel.py)
+    instrument_tools(mcp)
 
     if mcp_transport == "stdio":
         # stdio doesn't need host/port
